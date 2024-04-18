@@ -9,3 +9,7 @@
                      :"default_model": "moonshot-v1-8k",
     - 这里由于兼容性的问题，修改了pyplot.py 的源码 （T343Line）
             canvas_class = module.FigureCanvasAgg
+            FigureCanvasQTAgg = module.FigureCanvasQTAgg
+    - 2024-4-18 页面全部重构，在考虑采用Gradio没有考虑到提供组件无法满足设计需求
+        - 重新进行页面需求分析，技术调研，决定基于streamlit在现有架构上继续重构
+        - 当前版本，保留 -v0.1

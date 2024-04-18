@@ -4,7 +4,6 @@
 @Time：2024/4/16 8:58
 @Copyright：©2018-2024 awesome!
 """
-import json
 import os
 
 import gradio as gr
@@ -19,6 +18,9 @@ my_theme = gr.Theme.load("./theme/miku.json")
 
 config = getConfig()
 
+"""
+*************注意，当前所有的功能都将封装到组件当中，换一句话说所有的base功能实现都在handler里面***********
+"""
 if __name__ == '__main__':
     os.environ["no_proxy"] = "localhost,127.0.0.1,::1"
     with gr.Blocks(

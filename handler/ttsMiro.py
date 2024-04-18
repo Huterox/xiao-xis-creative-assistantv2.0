@@ -131,7 +131,7 @@ TEXT ="""
 # VOICE = "zh-CN-YunyangNeural"
 # VOICE = "zh-CN-liaoning-XiaobeiNeural"
 VOICE = "zh-CN-shaanxi-XiaoniNeural"
-OUTPUT_FILE = "test07.mp3"
+OUTPUT_FILE = "../assert/audio/test07.mp3"
 
 
 async def amain() -> None:

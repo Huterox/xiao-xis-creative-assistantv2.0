@@ -6,18 +6,18 @@
 @Copyright：©2018-2024 awesome!
 """
 import json
+import os
 
 import gradio
 import gradio as gr
 from utils import Config
-import os
 
 class SettingComponent(object):
 
     def __init__(self,gr:gradio):
         self.gr:gradio = gr
-        # config 是引用传递
-
+        self.current_file_path = os.path.abspath(__file__)
+        self.current_dir = os.path.dirname(self.current_file_path)
     def save_settings(self,openai_key, base_url, default_model,
                       mj_api_key, global_temperature)->None:
 
@@ -27,7 +27,7 @@ class SettingComponent(object):
         Config.settings["image_api_key"] = mj_api_key
         Config.settings["temperature"] = global_temperature
         # 持久层更新，虽然是在main.py当中调用，但是读取到的还是在webui下面的
-        # 不更新文件，只在当前有效
+        # 不更新文件，只在当前的会话有效
         # current_file_path = os.path.abspath(__file__)
         # current_dir = os.path.dirname(current_file_path)
         # json_data = json.dumps(Config.settings, indent=4,ensure_ascii=False)
@@ -80,39 +80,39 @@ class SettingComponent(object):
                     # 右侧是关于音频的试听
                     gr.Label(value="语音试听😋", container=False)
                     with gr.Row():
-                        self.generate_audio = gr.Audio(value=r"F:\projects\MatchPro\NovelMaker\handler\test01.mp3",
+                        self.generate_audio = gr.Audio(value=self.current_dir+r"\..\assert\audio\test01.mp3",
                                                        scale=4,
                                                        min_width=10, label="ZH-CN-小艺",
                                                        type="filepath"
                                                        )
-                        self.generate_audio = gr.Audio(value=r"F:\projects\MatchPro\NovelMaker\handler\test02.mp3",
+                        self.generate_audio = gr.Audio(value=self.current_dir+r"\..\assert\audio\test02.mp3",
                                                        scale=4,
                                                        min_width=10, label="ZH-CN-云建",
                                                        type="filepath"
                                                        )
-                        self.generate_audio = gr.Audio(value=r"F:\projects\MatchPro\NovelMaker\handler\test03.mp3",
+                        self.generate_audio = gr.Audio(value=self.current_dir+r"\..\assert\audio\test03.mp3",
                                                        scale=4,
                                                        min_width=10, label="ZH-CN-云溪",
                                                        type="filepath"
                                                        )
-                        self.generate_audio = gr.Audio(value=r"F:\projects\MatchPro\NovelMaker\handler\test04.mp3",
+                        self.generate_audio = gr.Audio(value=self.current_dir+r"\..\assert\audio\test04.mp3",
                                                        scale=4,
                                                        min_width=10, label="ZH-CN-云霞",
                                                        type="filepath"
                                                        )
                     with gr.Row():
 
-                        self.generate_audio = gr.Audio(value=r"F:\projects\MatchPro\NovelMaker\handler\test05.mp3",
+                        self.generate_audio = gr.Audio(value=self.current_dir+r"\..\assert\audio\test05.mp3",
                                                        scale=4,
                                                        min_width=10, label="ZH-CN-云阳",
                                                        type="filepath"
                                                        )
-                        self.generate_audio = gr.Audio(value=r"F:\projects\MatchPro\NovelMaker\handler\test06.mp3",
+                        self.generate_audio = gr.Audio(value=self.current_dir+r"\..\assert\audio\test06.mp3",
                                                        scale=4,
                                                        min_width=10, label="ZH-CN-辽宁-小北",
                                                        type="filepath"
                                                        )
-                        self.generate_audio = gr.Audio(value=r"F:\projects\MatchPro\NovelMaker\handler\test07.mp3",
+                        self.generate_audio = gr.Audio(value=self.current_dir+r"\..\assert\audio\test07.mp3",
                                                        scale=4,
                                                        min_width=10, label="ZH-CN-陕西-小妮",
                                                        type="filepath"
