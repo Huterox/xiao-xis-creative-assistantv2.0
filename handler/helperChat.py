@@ -24,7 +24,7 @@ class ChatBotHandler(object):
         return "", history + [[user_message, None]]
 
     def bot_stream(self,history):
-        # 这里面异步有点问题，Gradio的调度器好像有点坑
+
         if(len(history)==0):
             history.append([self.current_message,None])
         bot_message = self.getResponse(history[-1][0],history)
@@ -34,6 +34,24 @@ class ChatBotHandler(object):
             time.sleep(0.02)
             yield history
 
+    def signChat(self,history):
+        history_openai_format = []
+        # 先加入系统信息
+        history_openai_format.append(
+            {"role": "system",
+             "content": Config.settings.get("system_xiaoxi")
+             },
+        )
+        # 再加入解析信息
+        history_openai_format.extend(history)
+        # print(history_openai_format)
+        completion = client.chat.completions.create(
+            model=Config.settings.get("default_model"),
+            messages=history_openai_format,
+            temperature=Config.settings.get("temperature"),
+        )
+        result = completion.choices[0].message.content
+        return result
 
     def getResponse(self,message,history):
         history_openai_format = []
@@ -48,6 +66,7 @@ class ChatBotHandler(object):
                 history_openai_format.append({"role": "user", "content": human})
             if(assistant!=None):
                 history_openai_format.append({"role": "assistant", "content": assistant})
+
         completion = client.chat.completions.create(
             model=Config.settings.get("default_model"),
             messages=history_openai_format,

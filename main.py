@@ -4,51 +4,44 @@
 @Time：2024/4/16 8:58
 @Copyright：©2018-2024 awesome!
 """
-import os
-
-import gradio as gr
 
 from utils import getConfig
-from webui.chat import ChatBotComponent
-from handler.helperChat import ChatBotHandler
-from webui.novel import NovelComponent
-from webui.setting import SettingComponent
-
-my_theme = gr.Theme.load("./theme/miku.json")
+from webui.streamlit.novelAssistant import AssistantNovel
 
 config = getConfig()
+import streamlit as st
 
-"""
-*************注意，当前所有的功能都将封装到组件当中，换一句话说所有的base功能实现都在handler里面***********
-"""
+def index():
+
+    st.markdown("*Novel-Video创作助手* is **really** ***cool*** --v0.1beta（￣︶￣）↗　.")
+    st.markdown('''
+        :red[自带] :orange[小汐] :green[创作助手] :blue[完成文档润色] :violet[流水线]
+        :gray[内容生成] :rainbow[解放双手].''')
+    st.markdown("Welcome to here! &mdash;\
+                :tulip::cherry_blossom::rose::hibiscus::sunflower::blossom:")
+
+
 if __name__ == '__main__':
-    os.environ["no_proxy"] = "localhost,127.0.0.1,::1"
-    with gr.Blocks(
-        title='Novel tweet generator',
-        theme=my_theme,
-        fill_height = False,
-        css="""
-        footer {visibility: hidden}
-        """,
 
-    ) as demo:
-        title = gr.Markdown("#### 创作生成器v0.1-beta（￣︶￣）↗　")
-        # 顶部tag导航
-        with gr.Tab(label="Novel助手"):
-            # chat 对话机器人
-            chat = ChatBotComponent(gr)
-            # chat.set_response(ChatBotHandler().chat)
-            chat.set_streamBot(ChatBotHandler())
-            chat.creat()
+    def page_content(page):
+        if page == ':rainbow[首页]':
+            index()
+        if page == ':green[novel助手]':
+            assistant = AssistantNovel()
+            assistant.page()
+        elif page == ':blue[novel生成]':
+            st.title('这是页面 2')
+            st.write('页面 2 的内容。')
+        elif page == ':red[设置]':
+            st.title('这是页面 3')
+            st.write('页面 3 的内容。')
 
-        with gr.Tab(label="Novel合成"):
-            # novel合成
-            novel = NovelComponent(gr)
-            novel.create()
 
-        with gr.Tab(label="key设置"):
-            # 设置页面
-            setting = SettingComponent(gr)
-            setting.create()
+    selected_page = st.sidebar.radio(
+        'Select Page which you want 👇',
+        [":rainbow[首页]", ":green[novel助手]", ":blue[novel生成]",":red[设置]"],
+        captions=["HomePage👻", "Novel Assistant😊", "Novel generation🤑","Settings😶"]
+    )
 
-    demo.launch(share=config.get("share",True))
+
+    page_content(selected_page)
