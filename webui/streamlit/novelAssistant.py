@@ -41,7 +41,11 @@ class AssistantNovel(object):
         if st.session_state.messages[-1]["role"] != "assistant":
             with st.chat_message("assistant"):
                 with st.spinner("Thinking..."):
-                    response = self.get_response(prompt,st.session_state.messages)
+                    try:
+                        response = self.get_response(prompt,st.session_state.messages)
+                    except Exception as e:
+                        print(e)
+                        response = "哦┗|｀O′|┛ 嗷~~，出错了，请稍后再试！😥"
                     placeholder = st.empty()
                     full_response = ''
                     for item in response:

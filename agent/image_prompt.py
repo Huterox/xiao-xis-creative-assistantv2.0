@@ -92,14 +92,14 @@ class ImagePromptAgent(object):
         return result
 
 
-    def ExtractSegmentNovel(self,message):
+    def ExtractSegmentNovel(self,message,temperature=0.4):
         # scenes_list = json.loads(self.__send(message,ExtractSegmentNovel))
         # return scenes_list
-        return self.__send(message,ExtractSegmentNovel)
+        return self.__send(message,ExtractSegmentNovel,temperature)
 
-    def ToImagePrompt(self,message):
+    def ToImagePrompt(self,message,temperature=0.4):
         english_prompt ="best quality,masterpiece,illustration, an extremely delicate and beautiful,extremely detailed,CG,unity,8k wallpaper, "+\
-                        self.__send(message,ToImagePrompt)
+                        self.__send(message,ToImagePrompt,temperature)
         return english_prompt
 
 
