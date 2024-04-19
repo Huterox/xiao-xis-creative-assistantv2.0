@@ -7,6 +7,7 @@
 
 from utils import getConfig
 from webui.streamlit.novelAssistant import AssistantNovel
+from webui.streamlit.novelSettings import NovelSettings
 
 config = getConfig()
 import streamlit as st
@@ -33,8 +34,8 @@ if __name__ == '__main__':
             st.title('这是页面 2')
             st.write('页面 2 的内容。')
         elif page == ':red[设置]':
-            st.title('这是页面 3')
-            st.write('页面 3 的内容。')
+            novelSettings = NovelSettings()
+            novelSettings.page()
 
 
     selected_page = st.sidebar.radio(

@@ -19,6 +19,7 @@ class ChatBotHandler(object):
         self.bot_name = bot_name
         self.current_message = None
 
+
     def user_stream(self,user_message, history):
         self.current_message = user_message
         return "", history + [[user_message, None]]

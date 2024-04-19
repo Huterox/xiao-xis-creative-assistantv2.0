@@ -7,9 +7,12 @@
 """
 import json
 import os
+import streamlit as st
 
+"""
+这里重新修改为支持streamlit状态保存的方法
+"""
 def getConfig()->dict:
-
     try:
         with open(r"./config.json", 'r', encoding="utf-8") as f:
             config = json.load(f)
@@ -24,6 +27,10 @@ def getConfig()->dict:
             current_dir = os.path.dirname(current_file_path)
             with open(current_dir + "/config.json", 'r', encoding="utf-8") as f:
                 config = json.load(f)
+    if ("settings" in st.session_state.keys()):
+        config = st.session_state.settings
+    else:
+        st.session_state.settings = config
     return config
 # config 变为全局变量
 
