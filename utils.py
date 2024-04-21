@@ -8,6 +8,8 @@
 import json
 import os
 import streamlit as st
+from moviepy.audio.io.AudioFileClip import AudioFileClip
+from moviepy.video.VideoClip import ImageClip
 
 """
 这里重新修改为支持streamlit状态保存的方法
@@ -37,75 +39,68 @@ def getConfig()->dict:
 class Config(object):
     settings = getConfig()
 
-# -*- coding: utf-8 -*-
 
+# 合成视频
+data = [
+    {
+        "字幕": "part1",
+        "图片": r"F:\projects\MatchPro\NovelMaker\resource\img\20240421\830c050927e74930bd5a483c71dc438f.jpg",
+        "音频": r"F:\projects\MatchPro\NovelMaker\assert\audio\test01.mp3"
+    },
+    {
+        "字幕": "part2",
+        "图片": r"F:\projects\MatchPro\NovelMaker\resource\img\20240421\e682e3f2ce5e48b9a2ec667f4da4cfeb.jpg",
+        "音频": r"F:\projects\MatchPro\NovelMaker\assert\audio\test01.mp3"
+    },
+]
+from PIL import Image, ImageDraw, ImageFont
+from moviepy.editor import ImageClip, AudioFileClip, CompositeVideoClip, VideoFileClip
 
-import os
-from moviepy.editor import ImageSequenceClip, AudioFileClip, concatenate_videoclips
-import numpy as np
+# 字体路径，确保选择一个系统中存在的字体
+font_path = r"F:\projects\MatchPro\NovelMaker\assert\font\simsun.ttc"
 
-def flFunc(gf, t):  # 变换主函数
-    return frameScroll(gf(t), 2)  # 一帧往前滚动2行
+def create_video_with_subtitles(data, font_path,save_path):
+    video_clips = []
+    total_duration = 0
+    index = 0
+    for item in data:
+        img = Image.open(item["图片"])
+        width, height = img.size
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.truetype(font_path, size=20)
+        # 计算一下字幕位置，假设每个字20px
+        text_item = item["字幕"]
+        start_x = (width - len(text_item)*25)//2
+        # 再算一下要几行
+        line = (((len(text_item)*30)//width)+1)*30
+        text_position = (start_x, img.size[1] - line)
+        draw.text(text_position, text_item, font=font, fill=(255, 255, 255))
 
+        new_path = os.path.splitext(item["图片"])[0] + item["字幕"] + "-c.jpg"
+        resized_image = img.resize((640, 480), Image.Resampling.LANCZOS)
+        resized_image.save(new_path)
 
-def frameScroll(frame, x):  # 实现帧数据环绕滚动x行
-    global framePos, clipHeight
+        img_clip = ImageClip(new_path)  # 不需要设置fps，因为我们会根据音频时长设置
+        audio_clip = AudioFileClip(item["音频"])
+        duration = audio_clip.duration
+        total_duration += duration
+        audio_clip.start = duration*index
+        audio_clip.end = total_duration
 
-    moveCount = framePos + x  # 本次移动行数在前一次行数基础上加x行
-    if moveCount > clipHeight:  # 环绕判断处理，其实用moveCount %= clipHeight语句更简洁效果相同，但取余的运算效率低一些
-        moveCount -= clipHeight
-    framePos = moveCount  # 记录本次移动的行数
-    remainFrame = frame[:moveCount]  # 取前moveCount-1行
-    exceedFrame = frame[moveCount:]  # 取后面剩余行
+        img_clip = img_clip.set_duration(duration)  # 设置图片剪辑的持续时间以匹配音频的时长
 
-    return np.vstack((exceedFrame, remainFrame))  # 将两部分数据叠加实现环绕效果，返回作为变换后的帧
+        video_clip = CompositeVideoClip([img_clip]).set_audio(audio_clip)
+        video_clip.start = index*duration
+        video_clip.end = total_duration
+        video_clip.set_audio(audio_clip)
+        video_clips.append(video_clip)
+        index+=1
 
+    # 将所有片段合并成一个视频，moviepy会自动计算总时长
+    final_clip = CompositeVideoClip(video_clips, size=video_clips[0].size).set_fps(1)
 
-
-def merge_vedio(image_dir_path,audio_dir_path):
-
-
-    # 将文件名按照顺序排列
-    image_files = sorted(os.listdir(image_dir_path))
-    audio_files = sorted(os.listdir(audio_dir_path))
-    print(image_files)
-    clips = []
-
-    # 图片和音频的持续时间
-    duration = 5  # 您可以根据需要调整此值
-    speed =10
-    size =700
-    for i in range(len(image_files)):
-        image_path = os.path.join(image_dir_path, image_files[i])
-        audio_path = os.path.join(audio_dir_path, audio_files[i])
-        img_clip = ImageSequenceClip([image_path], duration)
-        audio_clip = AudioFileClip(audio_path)
-
-        # 根据音频的持续时间调整图片的持续时间
-        fl = lambda gf, t: gf(t)[int(speed * t):int(speed * t) + size,:]
-        # 如果你想设置滚动屏幕可以尝试下面的代码
-        # img_clip = img_clip.fl(lambda gf, t: gf(t)[int(50*t):int(50*t) + 360, :], apply_to='mask').set_duration(audio_clip.duration)
-        img_clip = img_clip.set_position(('center', 'center')).fl(fl,apply_to=['mask']).set_duration(audio_clip.duration)
-        # img_clip = img_clip.fl(flFunc, apply_to='mask').set_duration(
-        #     audio_clip.duration)
-
-        # 将音频添加到图片剪辑中
-        clip = img_clip.set_audio(audio_clip)
-
-
-        clips.append(clip)
-
-    # 将所有剪辑合并成一个视频
-    final_clip = concatenate_videoclips(clips)
-    new_parent = image_dir_path.replace("data_image","data_vedio").split("story")[0]
-    # 导出视频
-    if not os.path.exists(new_parent):
-        os.makedirs(new_parent)
-    new_path = image_dir_path.replace("data_image","data_vedio")
-    final_clip.write_videofile(new_path+".mp4", fps=24,audio_codec="aac")  # 可以根据需要调整fps值
-    return new_path+".mp4"
+    # 写入视频文件，不需要指定fps，因为我们已经在CompositeVideoClip中设置了
+    final_clip.write_videofile(save_path, codec="libx264")
 
 if __name__ == '__main__':
-    merge_vedio("data/data_image/侦探悬疑类/story_1","data/data_audio/侦探悬疑类/story_1")
-
-
+    create_video_with_subtitles(data, font_path,save_path="output_video_with_subtitles.mp4")

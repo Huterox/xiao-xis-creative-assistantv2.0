@@ -98,8 +98,15 @@ class ImagePromptAgent(object):
         return self.__send(message,ExtractSegmentNovel,temperature)
 
     def ToImagePrompt(self,message,temperature=0.4):
-        english_prompt ="best quality,masterpiece,illustration, an extremely delicate and beautiful,extremely detailed,CG,unity,8k wallpaper, "+\
-                        self.__send(message,ToImagePrompt,temperature)
+        # english_prompt ="best quality,masterpiece,illustration, an extremely delicate and beautiful,extremely detailed,CG,unity,8k wallpaper, "+\
+                        # self.__send(message,ToImagePrompt,temperature)
+
+        english_prompt = "best quality " + \
+                         self.my_open_ai.chat(message, ToImagePrompt, temperature)+" --ar 4:3"
+
+        return english_prompt
+    def ToEnglish(self,text,temperature=0.8):
+        english_prompt = self.my_open_ai.chat(text, ToImagePrompt, temperature)
         return english_prompt
 
 

@@ -5,9 +5,15 @@
 @Time：2024/4/18 9:54
 @Copyright：©2018-2024 awesome!
 """
+import asyncio
+import os
 import re
+import uuid
+from datetime import datetime
+import edge_tts
 
 from agent.image_prompt import ImagePromptAgent
+from handler.text2Image import Text2Image
 
 """
 ######################################################################
@@ -15,30 +21,21 @@ from agent.image_prompt import ImagePromptAgent
 ######################################################################
 """
 
-TEST_TEXT = """
-  在一个古老的东方国度，住着一个名叫阿拉丁的孤儿少年。他与母亲一起生活在贫困之中，阿拉丁不爱学习，也不工作，整日游荡在街头。
-
-    一天，阿拉丁的生活中出现了一个自称是他叔叔的陌生人。这位陌生人实际上是一个来自遥远国度的邪恶魔法师，他寻找神灯已经多年。魔法师通过魔法得知，只有阿拉丁才能取得那盏神灯。
-    
-    魔法师诱骗阿拉丁帮助他找到神灯，并承诺给予他财富和地位。他带阿拉丁来到了一个偏远的地方，那里有一个被魔法封印的洞穴。魔法师让阿拉丁下降到洞穴中，取得一盏普通的铜灯和一些宝石。
-    
-    阿拉丁按照魔法师的指示进入了洞穴，并找到了神灯和其他财宝。但在他准备离开时，洞穴的入口突然关闭，阿拉丁被困在了里面。在绝望中，阿拉丁无意中擦了擦神灯，结果召唤出了神灯的守护神灵。神灵告诉阿拉丁，他可以许三个愿望。
-    
-    阿拉丁的第一个愿望是逃出洞穴，神灵立即实现了他的愿望。回到城市后，阿拉丁没有立即使用第二个愿望，而是开始用洞穴中的宝石改善自己和母亲的生活。
-    
-    随着时间的推移，阿拉丁被城市中的公主所吸引，并深深地爱上了她。他决定使用第二个愿望，希望能够变得富有和有地位，以便能够配得上公主。神灵再次实现了他的愿望，阿拉丁变成了城市中最富有、最受尊敬的人。
-    
-    阿拉丁的财富和魅力最终赢得了公主的芳心，他们相爱并准备结婚。然而，魔法师通过间谍得知了神灯的消息，并设法骗取了阿拉丁的妻子信任，从她手中夺走了神灯。
-    
-    失去了神灯的阿拉丁陷入了绝望，但他并没有放弃。他决定要夺回神灯，并救回他的妻子。通过智慧和勇气，阿拉丁设计了一个计划，成功地从魔法师手中夺回了神灯，并在神灵的帮助下，将魔法师囚禁在了一个遥远的岛屿上。
-    
-    阿拉丁最终成为了一位英明的国王，他和公主过上了幸福的生活。神灯被安全地隐藏起来，以防再次落入邪恶之人的手中。这个故事告诉我们，真正的幸福和成功不是靠魔法和奇迹，而是靠个人的勇气、智慧和坚持不懈的努力。
-    """
 
 class StoryBoardHandler(object):
     def __init__(self):
         # 专门处理分镜的Agent
         self.agentStoryBoard = ImagePromptAgent()
+        self.text2image = Text2Image()
+        self.voice_map = {
+            "小艺":"zh-CN-XiaoyiNeural", "云建":"zh-CN-YunjianNeural",
+            "云溪":"zh-CN-YunxiNeural", "云霞":"zh-CN-YunxiaNeural",
+            "云阳":"zh-CN-YunyangNeural", "小北":"zh-CN-liaoning-XiaobeiNeural",
+            "小妮":"zh-CN-shaanxi-XiaoniNeural"
+        }
+        self.current_file_path = os.path.abspath(__file__)
+        self.current_dir = os.path.dirname(self.current_file_path)
+        self.resource_dir = self.current_dir+"/../resource"
 
     # 将返回的结果解析成正常的符合要求的字典，LLM返回的格式并没有严格按照格式返回
     def __extract_json(self,text):
@@ -78,58 +75,76 @@ class StoryBoardHandler(object):
         data = self.__extract_json(self.agentStoryBoard.ExtractSegmentNovel(text,temperature))
         return data
 
+    """
+    将文本提示词转化为图片
+    """
+    def getText2Img(self,prompt):
+        # 先得到英文的提示词
+        prompt = self.agentStoryBoard.ToImagePrompt(prompt)
+        # 然后去请求得到图片
+        img = self.text2image.text2image(prompt)
+        if(img):
+            img_path = self.__create_img_stream()
+            img.save(img_path)
+            return img_path
+        return -1
+
+    async def __amain(self,stream,text,voice) -> None:
+        """异步处理拿到语音"""
+        communicate = edge_tts.Communicate(text, voice)
+        await communicate.save(stream)
+
+    def text2Audio(self,stream,text,voice):
+        # 获取语音，这里的话比较特殊需要使用到协程拿到语音
+        loop = asyncio.new_event_loop()
+        try:
+            # 在这个事件循环中运行amain协程
+            loop.run_until_complete(self.__amain(stream,text,voice))
+        finally:
+            # 关闭事件循环
+            loop.close()
+
+    def __create_img_stream(self):
+
+        now = datetime.now()
+        year_month_day = now.strftime("%Y%m%d")
+        file_uuid = uuid.uuid4()
+        audio_stream = self.resource_dir + "/img" + "/" + year_month_day + "/"
+        if (not os.path.exists(audio_stream)):
+            os.makedirs(audio_stream)
+        audio_stream += file_uuid.hex + ".jpg"
+        return audio_stream
+
+    def __create_stream(self):
+        now = datetime.now()
+        year_month_day = now.strftime("%Y%m%d")
+        file_uuid = uuid.uuid4()
+        audio_stream = self.resource_dir+"/audio"+"/"+year_month_day+"/"
+        if( not os.path.exists(audio_stream)):
+            os.makedirs(audio_stream)
+        audio_stream += file_uuid.hex+".mp3"
+        return audio_stream
+
+    """
+    将文本转化为音频,返回流对象，可以直接进行在st上展示（重点是在内存里面）
+    """
+    def getText2Audio(self,text,voice,mode="中文"):
+        voice = self.voice_map.get(voice,"zh-CN-XiaoyiNeural")
+        if mode == "中文":
+            text = text
+        else:
+            text = self.agentStoryBoard.ToEnglish(text)
+        try:
+            audio_stream = self.__create_stream()
+            self.text2Audio(audio_stream,text,voice)
+        except Exception as e:
+            print(e)
+            audio_stream = -1
+        return audio_stream
+
 if __name__ == '__main__':
     storyBoardHandler = StoryBoardHandler()
-    print(storyBoardHandler.getProgressHandler(TEST_TEXT))
-    """
-      [
-        {
-            "场景1": "他与母亲一起生活在贫困之中，阿拉丁不爱学习，也不工作，整日游荡在街头。",
-            "描述1": "一个贫穷的孤儿少年和他的母亲一起生活在破旧的房屋中，少年没有工作也不学习，每天在繁忙的街道上无所事事。"
-        },
-        {
-            "场景2": "魔法师诱骗阿拉丁帮助他找到神灯，并承诺给予他财富和地位。",
-            "描述2": "一个邪恶的魔法师通过花言巧语诱骗一个天真的少年帮助他寻找一个传说中的神灯，承诺会给他财富和地位。"
-        },
-        {
-            "场景3": "魔法师让阿拉丁下降到洞穴中，取得一盏普通的铜灯和一些宝石。",
-            "描述3": "一个穿着长袍的魔法师站在一个神秘的洞穴口，指挥着一个年轻人下降到洞穴中去取得一盏铜灯和宝石。"
-        },
-        {
-            "场景4": "阿拉丁按照魔法师的指示进入了洞穴，并找到了神灯和其他财宝。",
-            "描述4": "一个勇敢的年轻人遵循着一个神秘人物的指示，进入了一个充满未知的洞穴，并在其中找到了一个古老的神灯和其他闪闪发光的财宝。"
-        },
-        {
-            "场景5": "在绝望中，阿拉丁无意中擦了擦神灯，结果召唤出了神灯的守护神灵。",
-            "描述5": "在一个昏暗的洞穴中，一个绝望的年轻人无意中擦拭了一盏古旧的铜灯，随即一个巨大的神灵出现在了他的面前。"
-        },
-        {
-            "场景6": "阿拉丁的第一个愿望是逃出洞穴，神灵立即实现了他的愿望。",
-            "描述6": "在一个封闭的洞穴中，年轻人向一个神灵许下了第一个愿望，希望能够逃离这个地方，神灵随即让他的愿望成真。"
-        },
-        {
-            "场景7": "阿拉丁被城市中的公主所吸引，并深深地爱上了她。",
-            "描述7": "在一个繁华的城市中，一个贫穷的年轻人被高高在上的公主所吸引，深深地爱上了她。"
-        },
-        {
-            "场景8": "阿拉丁的财富和魅力最终赢得了公主的芳心，他们相爱并准备结婚。",
-            "描述8": "一个富有魅力的年轻人用他的财富和真诚赢得了公主的爱情，两人相爱并开始准备他们的婚礼。"
-        },
-        {
-            "场景9": "魔法师通过间谍得知了神灯的消息，并设法骗取了阿拉丁的妻子信任，从她手中夺走了神灯。",
-            "描述9": "一个狡猾的魔法师通过间谍得知了一个年轻人拥有神灯的秘密，他巧妙地骗取了年轻人妻子的信任，并从她手中夺走了神灯。"
-        },
-        {
-            "场景10": "阿拉丁设计了一个计划，成功地从魔法师手中夺回了神灯，并在神灵的帮助下，将魔法师囚禁在了一个遥远的岛屿上。",
-            "描述10": "一个勇敢的年轻人设计了一个巧妙的计划，成功地从一个邪恶的魔法师手中夺回了神灯，并在神灵的帮助下，将魔法师囚禁在了一个遥远的岛屿上。"
-        },
-        {
-            "场景11": "阿拉丁最终成为了一位英明的国王，他和公主过上了幸福的生活。",
-            "描述11": "一个勇敢的年轻人最终成为了一位英明的国王，他和心爱的公主一起过上了幸福快乐的生活。"
-        },
-        {
-            "场景12": "神灯被安全地隐藏起来，以防再次落入邪恶之人的手中。",
-            "描述12": "一盏拥有巨大魔力的神灯被一个智慧的国王安全地隐藏起来，以防止它再次落入邪恶之人的手中，给世界带来灾难。"
-        }
-    ]
-    """
+    # storyBoardHandler.getText2Audio("Hello my name is xiaoyi","小艺","中文")
+    # print(storyBoardHandler.getProgressHandler(TEST_TEXT))
+    storyBoardHandler.getText2Img("威武霸气的小奶狗")
+

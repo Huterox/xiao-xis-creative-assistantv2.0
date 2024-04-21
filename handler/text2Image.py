@@ -6,6 +6,11 @@
 @Copyright：©2018-2024 awesome!
 """
 import json
+import os
+import time
+import uuid
+from datetime import datetime
+from io import BytesIO
 
 from utils import Config
 
@@ -16,7 +21,7 @@ from utils import Config
 """
 
 import requests
-
+from PIL import Image
 
 api_key = Config.settings.get("image_api_key")
 
@@ -28,24 +33,37 @@ class Text2Image():
             'Content-Type': 'application/json'
         }
 
+        self.current_file_path = os.path.abspath(__file__)
+        self.current_dir = os.path.dirname(self.current_file_path)
+        self.resource_dir = self.current_dir+"/../resource"
+
     def get_taskId(self,prompt):
-        data = {
-            "base64Array": [],
-            "instanceId": "",
-            "modes": [],
-            "notifyHook": "https://ww.baidu.com/notifyHook/back",
-            "prompt": prompt,
-            "remix": True,
-            "state": ""
-        }
 
-        response = requests.post(
-            url='https://api.openai-hk.com/fast/mj/submit/imagine',
-            headers=self.headers,
-            data=json.dumps(data)
-        )
+        def send(prompt,headers):
+            data = {
+                "base64Array": [],
+                "instanceId": "",
+                "modes": [],
+                "notifyHook": "https://ww.baidu.com/notifyHook/back",
+                "prompt": prompt,
+                "remix": True,
+                "state": ""
+            }
 
-        return response.json()
+            response = requests.post(
+                url='https://api.openai-hk.com/fast/mj/submit/imagine',
+                headers=headers,
+                data=json.dumps(data)
+            )
+            return response.json()
+        try:
+            result = send(prompt, self.headers)
+        except Exception as e:
+            result = {'code':-1}
+        if result.get('code') == 1:
+            return result.get("result")
+        else:
+            return None
 
     #1713283471368561
     def get_Image(self,task_id):
@@ -55,13 +73,76 @@ class Text2Image():
         response = requests.get(url, headers=self.headers)
         return response.json()
 
+    def __create_img_stream(self):
+
+        now = datetime.now()
+        year_month_day = now.strftime("%Y%m%d")
+        file_uuid = uuid.uuid4()
+        audio_stream = self.resource_dir + "/img" + "/" + year_month_day + "/"
+        if (not os.path.exists(audio_stream)):
+            os.makedirs(audio_stream)
+        audio_stream += file_uuid.hex + ".jpg"
+        return audio_stream
+
+
+    def __getImg(self,url):
+        response = requests.get(url)
+        response.raise_for_status()
+        image = Image.open(BytesIO(response.content))
+        width, height = image.size
+        quarter_width = width // 2
+        quarter_height = height // 2
+        # 裁剪左上角的四分之一图片
+        cropped_image = image.crop((0, 0, quarter_width, quarter_height))
+        return cropped_image
+        # width, height = cropped_image.size
+        # new_height = int((3 / 4) * width)
+        # # 使用resize方法调整图片尺寸
+        # resized_image = cropped_image.resize((width, new_height), Image.Resampling.LANCZOS)
+        # return resized_image
+
+    # 只要这个任务执行失败，那么我们就返回为空
+    def text2image(self,prompt):
+        # 先拿到task_id
+        task_id = self.get_taskId(prompt)
+        if(task_id):
+            return self.__text2image(prompt,task_id)
+        else:
+            return None
+
+    def __text2image(self,prompt,task_id):
+
+        res = self.get_Image(task_id)
+        # 执行失败
+        if(res.get("status")=="FAILURE"):
+            return None
+        if(res.get('progress') == "100%"):
+            return self.__getImg(res.get("imageUrl"))
+        else:
+            # 还在生成，等待一会再去重试呗,调用api生成还是比较慢的
+            time.sleep(2)
+            return self.__text2image(prompt,task_id)
+
+
 
 if __name__ == '__main__':
-    text2image = Text2Image()
+    # text2image = Text2Image()
     # task = text2image.get_taskId("a black cat")
     # task_id = task.get("result")
     # print(task,task_id)
-    print(text2image.get_Image("1713283927285806"))
+    # print(text2image.get_Image("1713283927285806"))
+
+    # print(text2image.text2image("a black cat"))
+
+    image = Image.open(r"F:\projects\MatchPro\NovelMaker\resource\img\20240421\c58237123b824193950c51ebfa29d921.jpg")
+    image.show()
+    width, height = image.size
+    quarter_width = width // 2
+    quarter_height = height // 2
+    crop_image=image.crop((0,0,quarter_width,quarter_height))
+
+    new = image.resize((400, 300), Image.Resampling.LANCZOS)
+    new.show()
 
     """
     执行成功之后，返回
