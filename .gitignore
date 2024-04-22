@@ -92,3 +92,4 @@ target/
 
 # .env files
 .env
+config.json
