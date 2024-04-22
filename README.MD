@@ -80,7 +80,10 @@ pip install -r requirements.txt
     "image_api_key": "中转站-key"
 }
 ```
-
+之后，运行指令：    
+```bash
+streamlit run main.py
+```
 
 # 功能⚽
 我们功能主要如下：
