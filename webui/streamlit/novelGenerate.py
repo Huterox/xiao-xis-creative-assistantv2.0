@@ -57,6 +57,13 @@ class NovelGenerate:
         else:
             st.session_state.gen_data = self.gen_data
 
+    def __export_jianying_fn(self):
+        # 导出剪映模板
+        with self.col2:
+            with modal.container():
+                st.success("导出模板，需要先选定剪映的安装目录PS:（当前仅支持windows）~😊")
+                st.file_uploader(label="选择目录",)
+
     def __export_video_fn(self):
         gen_data = self.__get_gen_data()
         data = gen_data.get("data")
@@ -324,7 +331,7 @@ class NovelGenerate:
             with c1:
                 self.batch_gen = st.button("批量生成",type="primary",on_click=self.__batch_gen_fn)
             with c2:
-                self.export_button_jianying = st.button("导出剪映",type="primary")
+                self.export_button_jianying = st.button("导出剪映",type="primary",on_click=self.__export_jianying_fn)
             with c3:
                 self.export_button_video = st.button("导出视频",type="primary",on_click=self.__export_video_fn)
             with c4:

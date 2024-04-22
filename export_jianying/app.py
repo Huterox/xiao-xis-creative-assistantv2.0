@@ -5,24 +5,39 @@
 @Time：2024/4/21 23:56
 @Copyright：©2018-2024 awesome!
 """
-from export_jianying.lib.beate import tracks
-from export_jianying.lib.utils import *
+from export_jianying.utils.beate import tracks
+from export_jianying.utils.util import *
 import time
-
+"""
+ExportApp 保持单例模式 --v0.2.5 暂时放弃该方案   
+                        导出模板修改为，导出素材，便于用户在不同的软件中使用
+"""
 class ExportApp(object):
 
-    def __init__(self,base_path,folder_path,novel_name):
+    def __init__(self,base_path,folder_path,
+                 template_meta_info_path,
+                 template_meta_content_path):
+        """
+        :param base_path: 模板生成器基本工作目录
+        :param folder_path: 模板对应文件夹
+        :param novel_name: 对应生成的模板名字
+        :param template_meta_info_path: 媒体信息文件
+        :param template_meta_content_path: 媒体排布文件
+        """
         self.base_path = base_path
         self.folder_path = folder_path
-        self.novel_name = novel_name
+        self.template_meta_info_path = template_meta_info_path
+        self.template_meta_content_path = template_meta_content_path
 
-    def init_data(self):
+
+
+    def init_data(self,novel_name):
         """
         初始化数据
         """
-        self.template_meta_info_path, self.template_meta_content_path = template_path()  # 返回两个模版的完整路劲
-        self.draft_content_template = read_json(self.template_meta_content_path)  # 模版1
-        self.draft_meta_template = read_json(self.template_meta_info_path)  # 模版2
+        # 读取模板
+        self.draft_content_template = read_json(self.template_meta_content_path)
+        self.draft_meta_template = read_json(self.template_meta_info_path)
 
         self.draft_content_template['id'] = generate_id()  # 给模版ID设置唯一id
         tracks_video_data = tracks()  # 创建tracks用于存放图片信息
@@ -46,7 +61,7 @@ class ExportApp(object):
         self.draft_meta_template['draft_fold_path'] = self.folder_path.replace('\\',
                                                                                '/')
         # 剪映安装路劲加上草稿名字 如： D:/software/剪映/JianyingPro Drafts/六合八荒唯我独尊
-        self.draft_meta_template['draft_name'] = self.novel_name
+        self.draft_meta_template['draft_name'] = novel_name
         # 草稿名字 如："D:/software/剪映/JianyingPro Drafts/六合八荒唯我独尊"
 
     def write_data(self,meta_info_path,content_path):

@@ -12,7 +12,7 @@ import typing
 from openai import OpenAI
 
 from agent.prompt_template import ExtractSegmentNovel, ToImagePrompt
-from utils import Config
+from utils import Config, getConfig
 
 """
 将小说进行分段
@@ -27,7 +27,7 @@ client = OpenAI(api_key=api_key,base_url=Config.settings.get("openai_api_base"))
 import requests
 import json
 
-
+config = getConfig()
 
 class MyOpenAI():
 
@@ -36,7 +36,8 @@ class MyOpenAI():
 
         self.headers = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer hk-b43dkt1000016158c0caf2303830b50e89332d56bc2afeb7"
+            # 这里采用的是中转站的openai key
+            "Authorization": "Bearer "+config.get("image_api_key")
         }
 
     def chat(self,message,prompt,temperature=0.8):
