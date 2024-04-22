@@ -7,7 +7,12 @@
 """
 
 import os
+import shutil
 import time
+import uuid
+import zipfile
+from datetime import datetime
+
 from PIL import Image
 from handler.storyboardHandler import StoryBoardHandler
 import concurrent.futures
@@ -29,8 +34,10 @@ class NovelGenerate:
         self.storyBoardHandler = StoryBoardHandler()
         self.default_img = self.current_dir+r"/../../assert/img/wait.jpg"
         self.default_audio = self.current_dir + r"\..\..\assert\audio\test01.mp3"
+        self.sources = self.current_dir+"/../../resource/sources"
         self.video_builder = VideoBuilder()
-
+        self.exportSource = ExportSource()
+        self.zip_file_path = self.sources+"/default.zip"
         self.gen_data = {
             "novel_text":"",
             "temperature":0.4,
@@ -57,12 +64,50 @@ class NovelGenerate:
         else:
             st.session_state.gen_data = self.gen_data
 
+    """
+    -- v0.2.5 版本暂不考虑此方案
+    """
     def __export_jianying_fn(self):
         # 导出剪映模板
         with self.col2:
             with modal.container():
                 st.success("导出模板，需要先选定剪映的安装目录PS:（当前仅支持windows）~😊")
                 st.file_uploader(label="选择目录",)
+
+
+    def __export_source_do(self):
+        with self.con:
+            with st.spinner("导出中...请勿进行其他操作(＾Ｕ＾)ノ~ＹＯ"):
+                gen_data = self.__get_gen_data()
+                data = gen_data.get("data")
+                try:
+                    self.zip_file_path = self.exportSource.creat_zip(data)
+                except Exception as e:
+                    print(e)
+                    with self.ec2:
+                        st.error("导出失败😐")
+
+    def __export_source_fn(self):
+        # 导出媒体资源
+        with self.col2:
+            with modal.container() as self.con:
+                text_info = """
+                导出媒体资源，解压后您将得到三个文件夹：\n
+                    1. image
+                    2. audio
+                    3. subtitle \n
+                文件将按照序号为您重新命名，您只需要按序导入剪映等其它剪辑软件即可👀
+                """
+                st.success(text_info)
+                self.ec1,self.ec2 = st.columns(2)
+                # 这里就直接执行了
+                self.__export_source_do()
+                with self.ec2:
+                    st.download_button(label="下载视频", data=open(self.zip_file_path, 'rb').read(),
+                                          file_name='source.zip',
+                                          mime='application/zip')
+
+
 
     def __export_video_fn(self):
         gen_data = self.__get_gen_data()
@@ -326,12 +371,13 @@ class NovelGenerate:
             if(self.template):
                 self.__gen_model_fn()
         with self.col2:
-            st.markdown("当前版本直接生成视频，后续增加对简映模板的支持ヾ(≧▽≦*)o")
+            st.markdown("当前版本可直接生成视频，也可导出素材至剪映等剪辑软件ヾ(≧▽≦*)o")
             c1,c2,c3,c4,c5,c6 = st.columns(6)
             with c1:
                 self.batch_gen = st.button("批量生成",type="primary",on_click=self.__batch_gen_fn)
             with c2:
-                self.export_button_jianying = st.button("导出剪映",type="primary",on_click=self.__export_jianying_fn)
+                # self.export_button_jianying = st.button("导出剪映",type="primary",on_click=self.__export_jianying_fn)
+                self.export_button_jianying = st.button("导出素材",type="primary",on_click=self.__export_source_fn)
             with c3:
                 self.export_button_video = st.button("导出视频",type="primary",on_click=self.__export_video_fn)
             with c4:
@@ -437,3 +483,83 @@ class NovelGenerate:
                     st.session_state.gen_data = self.gen_data
                 st.button("保存分段" + str(index), on_click=show_pro)
 
+
+"""
+这个功能代码量稍微较多，因此专门写出一个工具类进行处理，核心功能如下：
+    1. 生成临时文件夹 
+    2. 将对应的媒体资源复制，生成到文件夹当中
+    3. 对临时文件夹进行打包为zip文件
+    4. 删除临时文件夹
+注意，所有生成文件，素材，在无法端都会进行保留，便于后续开放用户系统
+"""
+class ExportSource(object):
+
+    def __init__(self):
+        self.current_file_path = os.path.abspath(__file__)
+        self.current_dir = os.path.dirname(self.current_file_path)
+        # 拿到sources目录，我们接下来都需要在那里操作
+        self.base_folder = self.current_dir+"/../../resource/sources"
+
+    def __create_temp_folder(self):
+        # 先创建临时文件夹
+        now = datetime.now()
+        year_month_day = now.strftime("%Y%m%d")
+        file_uuid = uuid.uuid4()
+        folder_path = self.base_folder+"/"+str(year_month_day)+"/"+str(file_uuid)
+        os.makedirs(folder_path)
+        # 在创建image,audio,subtitle文件夹
+        os.makedirs(folder_path+"/image")
+        os.makedirs(folder_path+"/audio")
+        os.makedirs(folder_path+"/subtitle")
+        return folder_path
+
+
+    """
+    传入的data格式如下：
+             [{
+                "提示词":"prompt0",
+                "分段":"part0",
+                "图片":self.default_img,
+                "音频":self.default_audio
+             },]
+    """
+    def __copy_data2file(self,data:list[dict]):
+        folder_path = self.__create_temp_folder()
+        # 将数据文件存储到临时文件夹中
+        index = 1
+        for item in data:
+            origin_image = item["图片"]
+            origin_audio = item["音频"]
+            # 复制图片文件到image文件夹的文件中
+            shutil.copy(origin_image,folder_path+"/image/"+str(index)+".jpg")
+            # 复制图片文件到audio文件夹的文件中
+            shutil.copy(origin_audio, folder_path + "/audio/" + str(index) + ".mp3")
+            # 将对应的分段写入到subtitle文件夹的文件当中
+            with open(folder_path+"/subtitle/"+str(index)+".txt","w",encoding="utf-8") as f:
+                f.write(item["分段"])
+            index+=1
+        return folder_path
+
+    def __zip_data_file(self,data:list[dict]):
+        folder_path = self.__copy_data2file(data)
+        zip_file_name = folder_path.split("/")[-1]+".zip"
+        zip_file_path = folder_path+"/../"+zip_file_name
+        self.__compress_folder(folder_path,zip_file_path)
+        # 最后删除临时文件夹
+        shutil.rmtree(folder_path)
+        return zip_file_path
+
+
+
+    def __compress_folder(self,folder_path, zip_file_path):
+        with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files in os.walk(folder_path):
+                for file in files:
+                    # 创建一个相对路径名，确保压缩后的文件在ZIP文件中的结构与原始文件夹结构相同
+                    file_path = os.path.join(root, file)
+                    # 将相对路径转换为绝对路径
+                    zipf.write(file_path, os.path.relpath(file_path, folder_path))
+
+    # 对外开放的接口
+    def creat_zip(self, data: list[dict]):
+        return self.__zip_data_file(data)
