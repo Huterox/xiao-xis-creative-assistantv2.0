@@ -3,7 +3,7 @@
 By Huterox is making a tool for novel.
 
 不知道你是否经常在蹲坑之时见闻过”柳如烟“大帝之名。是否好奇过这样的视频是如何生成的？那么今天，我们就将揭开这并不神秘的面纱。那么同样的废话不多说，我们来大致看到我们最终将要实现的效果：
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/dd02adea9e0e497d86c054a43e01ccaa.png)
+![输入图片说明](doc/image/image0.png)
 
 当然秉承着我们一贯的风格，当你看见这篇博文的时候，我们已经将其开源了。我们将对当前版本的源代码进行开放。同时你对于如何从开始构建这一软件感到好奇，那么需要订阅本专栏进行查阅。是的，这需要花费一杯奶茶的价格。不过授人以鱼不如授人以渔，我建议可以尝试一下😀
 
@@ -45,7 +45,7 @@ pip install -r requirements.txt
 
 ### MoonShot 
 现在我们来获取暗月之面的API，这里我们需要进入到开发平台：[https://platform.moonshot.cn/console/info](https://platform.moonshot.cn/console/info) 这里你可能比较好奇，为什么使用这个LLM，实际上，是因为综合体验下来，它的中文效果较好，可以完成较为复杂的操作，相对于3.5或者其他模型来说。同时价格在能够接受的合理范围，当然，在我们接下来使用的中转站当中也可以直接使用GPT4.0但是使用成本将大大提升！
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/02c6bd796d5d43398f281c87825fb8d1.png)
+![输入图片说明](doc/image/image1.png)
 进入平台之后，按照平台提示即可完成创建，当然这里注意，免费用户有15元钱的token，但是存在并发限制，因此建议适开通付费提高并发量。
 
 ### 中转站
@@ -57,7 +57,8 @@ pip install -r requirements.txt
 
 同样先点击链接：[https://openai-hk.com/](https://openai-hk.com/?i=16158) 完成注册，之后按照[平台文档](https://www.openai-hk.com/docs/getting-started.html)完成api获取。这里需要注意一点。并且网站比较良心的是，当前openai免费开放了3.5，在中转站也同样免费开放。不过我们需要使用到Mj服务，因此我们依然需要开通key。
 注意，获取之后请开放您key的Mj权限：
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/40664a8419074f8a8b65519921c5278a.png)
+
+![输入图片说明](doc/image/image2.png)
 
 ### 准备就绪
 当您完成了您的本地项目环境以及获取了对应的api_key之后。您需要在您的项目根目录，创建一个`config.json` 文件，并且粘贴如下内容：
@@ -93,22 +94,22 @@ pip install -r requirements.txt
 
 ## 首页
 这一步确实没有什么，只是对我们项目的基本情况的介绍：
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/5deb5d6d31e74a38a95ef7ce2921c6dd.png)
+![输入图片说明](doc/image/image3.png)
 ## 创作助手
 这里我们的创作助手，主要对接的还是我们的MoonShot。当然我们修改了prompt，它是我们的助手”小汐“🎪
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/09fd4006ec2b4e9890452744bd27e949.png)
+![输入图片说明](doc/image/image4.png)
 
 ## 视频生成🖼
 接下来就是我们的重头戏了，如何使用视频生成器🎞
 一张图快速了解：
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/1ee8e85239d84f3aa3a392502a3de772.png)
+![输入图片说明](doc/image/image5.png)
 
 ## 设置🐱‍👤
 这里注意，在设置页面设置的内容，仅本次打开网站有效，刷新网页之后，将恢复您在config.json当中填写的内容，这里只是做临时设置使用哦🧐
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/ec283094192c4feda4e45a96e39c916b.png)
+![输入图片说明](doc/image/image7.png)
 
 
 # 联系方式🧵
 如果您对本项目感兴趣，同时也想要参与到项目当中，与其他志同道合的小伙伴一起交流，您可以扫描下方二维码，加入我们的群聊，欢迎您的加入😁
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/0b774831a36c4ef98c3cc2149f497160.png)
+![输入图片说明](doc/image/image8.png)
 QQ群：538545770
