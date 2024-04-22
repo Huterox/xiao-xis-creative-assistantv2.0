@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+config.json
+.idea
 # C extensions
 *.so
 *./sources/
@@ -92,4 +94,3 @@ target/
 
 # .env files
 .env
-config.json
