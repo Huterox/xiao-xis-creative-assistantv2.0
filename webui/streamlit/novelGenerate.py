@@ -5,35 +5,31 @@
 @Time：2024/4/19 9:38
 @Copyright：©2018-2024 awesome!
 """
-
 import os
 import shutil
 import time
 import uuid
 import zipfile
 from datetime import datetime
-
 from PIL import Image
 from handler.storyboardHandler import StoryBoardHandler
 import concurrent.futures
-
 from handler.videoBuilder import VideoBuilder
-
-"""
-负责生成，这里有非常多的操作，需要处理到
-"""
 import streamlit as st
 from streamlit_modal import Modal
 modal = Modal(key="Data",title="view😀")
+"""
+负责生成，这里有非常多的操作，需要处理到
+"""
 class NovelGenerate:
     def __init__(self):
-        # 在这里定义到我们的数据
 
+        # 在这里定义到我们的数据
         self.current_file_path = os.path.abspath(__file__)
         self.current_dir = os.path.dirname(self.current_file_path)
         self.storyBoardHandler = StoryBoardHandler()
         self.default_img = self.current_dir+r"/../../assert/img/wait.jpg"
-        self.default_audio = self.current_dir + r"\..\..\assert\audio\test01.mp3"
+        self.default_audio = self.current_dir + r"/../../assert/audio/test01.mp3"
         self.sources = self.current_dir+"/../../resource/sources"
         self.video_builder = VideoBuilder()
         self.exportSource = ExportSource()
@@ -44,19 +40,19 @@ class NovelGenerate:
             "audio_select": "小艺",
             "language_select":"中文",
             "data":[
-                    {
-                        "提示词":"prompt0",
-                        "分段":"part0",
-                        "图片":self.default_img,
-                        "音频":self.default_audio
-                    },
-                    {
-                        "提示词": "prompt1",
-                        "分段": "part1",
-                        "图片": self.default_img,
-                        "音频": self.default_audio
-                    },
-                    ]
+                {
+                    "提示词":"prompt0",
+                    "分段":"part0",
+                    "图片":self.default_img,
+                    "音频":self.default_audio
+                },
+                {
+                    "提示词": "prompt1",
+                    "分段": "part1",
+                    "图片": self.default_img,
+                    "音频": self.default_audio
+                },
+            ]
         }
 
         if("gen_data" in st.session_state.keys()):
