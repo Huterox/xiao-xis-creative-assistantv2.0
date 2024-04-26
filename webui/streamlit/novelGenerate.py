@@ -99,9 +99,12 @@ class NovelGenerate:
                 # 这里就直接执行了
                 self.__export_source_do()
                 with self.ec2:
-                    st.download_button(label="下载视频", data=open(self.zip_file_path, 'rb').read(),
-                                          file_name='source.zip',
-                                          mime='application/zip')
+                    # st.download_button(label="下载视频", data=open(self.zip_file_path, 'rb').read(),
+                    #                       file_name='source.zip',
+                    #                       mime='application/zip')
+                    st.download_button(label="下载资源", data=open(self.zip_file_path, 'rb').read(),
+                                       file_name='source.zip',
+                                       mime='application/zip')
 
 
 
@@ -122,7 +125,7 @@ class NovelGenerate:
                             st.download_button(label="下载视频", data=mp4_content, file_name='video.mp4',
                                                mime='video/mp4')
                 else:
-                    st.error("哦┗|｀O′|┛ 嗷~~，好像出现为止错误😫")
+                    st.error("哦┗|｀O′|┛ 嗷~~，好像出现未知错误😫")
 
 
     # 保证我们当前的gen_data和在session里面的是一致的
