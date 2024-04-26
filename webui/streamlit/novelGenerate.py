@@ -99,9 +99,12 @@ class NovelGenerate:
                 # 这里就直接执行了
                 self.__export_source_do()
                 with self.ec2:
-                    st.download_button(label="下载视频", data=open(self.zip_file_path, 'rb').read(),
-                                          file_name='source.zip',
-                                          mime='application/zip')
+                    # st.download_button(label="下载视频", data=open(self.zip_file_path, 'rb').read(),
+                    #                       file_name='source.zip',
+                    #                       mime='application/zip')
+                    st.download_button(label="下载资源", data=open(self.zip_file_path, 'rb').read(),
+                                       file_name='source.zip',
+                                       mime='application/zip')
 
 
 
@@ -122,7 +125,7 @@ class NovelGenerate:
                             st.download_button(label="下载视频", data=mp4_content, file_name='video.mp4',
                                                mime='video/mp4')
                 else:
-                    st.error("哦┗|｀O′|┛ 嗷~~，好像出现为止错误😫")
+                    st.error("哦┗|｀O′|┛ 嗷~~，好像出现未知错误😫")
 
 
     # 保证我们当前的gen_data和在session里面的是一致的
@@ -218,7 +221,8 @@ class NovelGenerate:
         # 默认任务得到的结果
         result = {
             "audio": -1,
-            "image": -1
+            "image": -1,
+
         }
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
@@ -336,8 +340,9 @@ class NovelGenerate:
                         for line_dict in data_list:
                             temp = {"提示词": line_dict.get("描述" + str(index)),
                                     "分段": line_dict.get("场景" + str(index)),
-                                    "图片": None,
-                                    "音频": None}
+                                    "图片": self.default_img,
+                                    "音频": self.default_audio
+                            }
                             data.append(temp)
                             index += 1
                         # 再将data更新上去
