@@ -39,7 +39,7 @@ class NovelSettings(object):
 
             st.markdown('''
                 :red[设置仅当前有效哟😎],\n
-                :green[刷新后回复默认设置😝]''')
+                :green[刷新后恢复默认设置😝]''')
             # 创建文本输入框
             openai_key = st.text_input("请输入你的OpenAI key", value=Config.settings.get("openai_api_key"))
             base_url = st.text_input("请输入你的Base Url", value=Config.settings.get("openai_api_base"))
