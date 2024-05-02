@@ -4,8 +4,8 @@ __pycache__/
 *$py.class
 
 .idea
-./app/novelMaker/config.json
-./app/novelMaker/README.MD
+F:\projects\MatchPro\xiaoxi_assistant\app\novelMaker\config.json
+F:\projects\MatchPro\xiaoxi_assistant\app\novelMaker\README.MD
 # C extensions
 *.so
 *./sources/
