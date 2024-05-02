@@ -23,20 +23,7 @@ def index():
     st.image(current_dir+r"/assert/img/bg.jpg",width=800)
 
 
-custom_css = """
-       <style>
-       .block-container.st-emotion-cache-gh2jqd.ea3mdgi5 {
-           width: 100%;
-           margin: 0 auto;
-           max-width: 1200px;
-       }
-       .st-emotion-cache-1i41fkg.e1f1d6gn2{
-           height: 600px;
-           overflow-y: scroll; /* 添加垂直滚动条 */
-       }
-       </style>
-   """
-st.markdown(custom_css, unsafe_allow_html=True)
+
 
 
 if __name__ == "__main__":
@@ -50,6 +37,21 @@ if __name__ == "__main__":
         elif page == ':red[YouTube搬运]':
             st.write(":red[YouTube搬运]")
 
+
+    custom_css = """
+           <style>
+           .block-container.st-emotion-cache-gh2jqd.ea3mdgi5 {
+               width: 100%;
+               margin: 0 auto;
+               max-width: 1200px;
+           }
+           .st-emotion-cache-1i41fkg.e1f1d6gn2{
+               height: 600px;
+               overflow-y: scroll; /* 添加垂直滚动条 */
+           }
+           </style>
+       """
+    st.markdown(custom_css, unsafe_allow_html=True)
 
     selected_page = st.sidebar.radio(
         'Select Page which you want 👇',
