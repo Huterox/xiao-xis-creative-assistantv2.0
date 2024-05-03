@@ -9,13 +9,19 @@
 import streamlit as st
 import os
 from app.novelMaker.main import run_app_novel
+from app.text2video.webui.main import  run_app_text2videoApp
+
 
 def index():
 
     st.markdown("*Novel-Video创作助手* is **really** ***cool*** --v0.1beta（￣︶￣）↗　.")
     st.markdown('''
         :red[自带] :orange[小汐] :green[创作助手] :blue[完成文档润色] :violet[流水线]
-        :gray[内容生成] :rainbow[解放双手].''')
+        :gray[内容生成] :rainbow[解放双手].
+        :yellow[v2.x版本支持集成其他模块] 
+        当前集成第三方模块，文本生成视频：[https://github.com/harry0703/MoneyPrinterTurbo](https://github.com/harry0703/MoneyPrinterTurbo)
+        
+        ''')
     st.markdown("Welcome to here! &mdash;\
                 :tulip::cherry_blossom::rose::hibiscus::sunflower::blossom:")
     current_file_path = os.path.abspath(__file__)
@@ -24,6 +30,11 @@ def index():
 
 
 
+st.set_page_config(page_title="小汐创作助手",
+                   page_icon="🤖",
+                   layout="wide",
+                   initial_sidebar_state="auto",
+              )
 
 
 if __name__ == "__main__":
@@ -33,7 +44,7 @@ if __name__ == "__main__":
         if page == ':green[novel创作]':
             run_app_novel()
         elif page == ':blue[文本生视频]':
-            st.write(":blue[文本生视频]")
+            run_app_text2videoApp()
         elif page == ':red[YouTube搬运]':
             st.write(":red[YouTube搬运]")
 
